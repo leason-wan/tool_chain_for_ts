@@ -1,0 +1,12 @@
+{
+  "name": "@leason/b",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@leason/a": "1.0.0",
+    "@types/md5": "2.2.0",
+    "chalk": "4.0.0",
+    "md5": "2.2.1"
+  }
+}
