@@ -3,7 +3,7 @@ export interface Dog {
 }
 
 export const d = {
-  name: 'poppy'
+  name: 'puppy'
 }
 
 export function add(a: number, b: number): number {

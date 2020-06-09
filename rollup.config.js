@@ -39,6 +39,7 @@ function createConfig(format, output, plugins = []) {
   }
 
   output.externalLiveBindings = false
+  output.name = name
 
   const tsPlugin = ts({
     check: true,
