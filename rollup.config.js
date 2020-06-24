@@ -1,45 +1,47 @@
-const chalk = require('chalk')
-const path = require('path')
+const chalk = require('chalk');
+const path = require('path');
 
-const packagesDir = path.resolve(__dirname, 'packages')
-const packageDir = path.resolve(packagesDir, process.env.TARGET)
-const name = path.basename(packageDir)
-const resolvePkg = p => path.resolve(packageDir, p)
-const pkg = require(resolvePkg(`package.json`))
-const packageOptions = pkg.buildOptions || {}
+const packagesDir = path.resolve(__dirname, 'packages');
+const packageDir = path.resolve(packagesDir, process.env.TARGET);
+const name = path.basename(packageDir);
+const resolvePkg = (p) => path.resolve(packageDir, p);
+const pkg = require(resolvePkg(`package.json`));
+const packageOptions = pkg.buildOptions || {};
 
 // rollup plugins
-const ts = require('rollup-plugin-typescript2')
-const json = require('@rollup/plugin-json')
-const { terser } = require('rollup-plugin-terser')
+const ts = require('rollup-plugin-typescript2');
+const json = require('@rollup/plugin-json');
+const { terser } = require('rollup-plugin-terser');
 
 const outputConfigs = {
   esm: {
     file: resolvePkg(`dist/${name}.esm.js`),
-    format: `es`
+    format: `es`,
   },
   cjs: {
     file: resolvePkg(`dist/${name}.cjs.js`),
-    format: `cjs`
+    format: `cjs`,
   },
   global: {
     file: resolvePkg(`dist/${name}.global.js`),
-    format: `iife`
+    format: `iife`,
   },
-}
+};
 
-const defaultFormats = ['esm', 'cjs']
-const packageFormats = packageOptions.formats || defaultFormats
-const buildConfigs = packageFormats.map(format => createConfig(format, outputConfigs[format]))
+const defaultFormats = ['esm', 'cjs'];
+const packageFormats = packageOptions.formats || defaultFormats;
+const buildConfigs = packageFormats.map((format) =>
+  createConfig(format, outputConfigs[format]),
+);
 
 function createConfig(format, output, plugins = []) {
   if (!output) {
-    console.log(chalk.yellow(`invalid format config: "${format}"`))
-    process.exit(1)
+    console.log(chalk.yellow(`invalid format config: "${format}"`));
+    process.exit(1);
   }
 
-  output.externalLiveBindings = false
-  output.name = name
+  output.externalLiveBindings = false;
+  output.name = name;
 
   const tsPlugin = ts({
     check: true,
@@ -49,11 +51,11 @@ function createConfig(format, output, plugins = []) {
       // compilerOptions: {
       //   sourceMap: false,
       //   declaration: true,
-        // declarationMap: shouldEmitDeclarations
+      // declarationMap: shouldEmitDeclarations
       // },
-      exclude: ['**/__tests__']
-    }
-  })
+      exclude: ['**/__tests__'],
+    },
+  });
 
   const rollupPluginResolve = require('@rollup/plugin-node-resolve').default;
   const rollupPluginCommonjs = require('@rollup/plugin-commonjs');
@@ -63,43 +65,43 @@ function createConfig(format, output, plugins = []) {
     packageOptions.enableNonBrowserBranches && format !== 'cjs'
       ? [
           rollupPluginResolve({
-            preferBuiltins: true
+            preferBuiltins: true,
           }),
           rollupPluginCommonjs({
-            sourceMap: false
+            sourceMap: false,
           }),
           rollupPluginBuiltins(),
-          rollupPluginGlobals()
+          rollupPluginGlobals(),
         ]
-      : []
+      : [];
 
   return {
     input: resolvePkg('src/index.ts'),
     plugins: [
       json({
-        namedExports: false
+        namedExports: false,
       }),
       tsPlugin,
       terser({
         module: /^esm/.test(format),
         compress: {
           ecma: 2015,
-          pure_getters: true
-        }
+          pure_getters: true,
+        },
       }),
       ...nodePlugins,
-      ...plugins
+      ...plugins,
     ],
     output,
     onwarn: (msg, warn) => {
       if (!/Circular/.test(msg)) {
-        warn(msg)
+        warn(msg);
       }
     },
     treeshake: {
-      moduleSideEffects: false
-    }
-  }
+      moduleSideEffects: false,
+    },
+  };
 }
 
-module.exports = buildConfigs
+module.exports = buildConfigs;
